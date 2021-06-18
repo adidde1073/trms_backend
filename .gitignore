@@ -1,0 +1,5 @@
+build/
+coverage/
+log/
+.env
+node_modules
