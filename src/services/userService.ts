@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* eslint-disable consistent-return */
 import User from '../models/user';
 import userDAO, { UserDAO } from '../repositories/userRepository';
@@ -21,9 +22,16 @@ class UserService {
     throw new Error('Usernmae does not exist');
   }
 
-  // logout(): void {
-  //   this.currentUser = undefined;
-  // }
+  updateUser(user: User, newBalance: number): Promise<boolean> {
+    if(this.dao.getById(user.id)) {
+      user.balance = newBalance;
+
+      const success = this.dao.updateUser(user);
+
+      return success;
+    }
+    throw new Error('Could not find user');
+  }
 }
 
 export default new UserService();

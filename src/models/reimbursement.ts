@@ -3,12 +3,10 @@ import { v4 as uuidv4 } from 'uuid';
 export default class Reimbursement {
   constructor(
     public username: string,
-    public date: string,
-    public time: string,
+    public date: number,
     public location: string,
     public description: string,
     public cost: number,
-    public eventType: string,
     public amount: number,
     public category: Category,
     public rStat: rStat,

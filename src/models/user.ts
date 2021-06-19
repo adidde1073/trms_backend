@@ -7,6 +7,7 @@ export default class User {
     public address: string,
     public phoneNumber: string,
     public role: Role,
+    public balance: number,
     public id: string = uuidv4(),
   ) {}
 }

@@ -2,6 +2,8 @@
 import { Router } from 'express';
 import Reimbursement from '../models/reimbursement';
 import reimbursementService from '../services/reimbursementService';
+import userService from '../services/userService';
+import User from '../models/user';
 
 const reimbursementRouter = Router();
 
@@ -27,17 +29,61 @@ reimbursementRouter.get('/:username', async (req, res) => {
 
 reimbursementRouter.post('/', async (req, res) => {
   // TODO: Implement the Create reimbursement endpoint
-  try {
-    const {
-      username, date, time, location, description, cost, eventType, amount, category, rstat,
-    } = req.body;
-    const reimbursement = new Reimbursement(username, date, time, location, description, cost, eventType, amount, category, rstat);
-    reimbursementService.addReimbursement(reimbursement);
-    res.status(201).send();
-  } catch(error) {
-    res.status(401).send();
-    error.log(error);
+  if(req.session.isLoggedIn && req.session.user) {
+    try {
+      console.log('I made into the try catch');
+      const employee: User = req.session.user;
+      console.log(employee);
+      const {
+        location, description, cost, category,
+      } = req.body;
+      let amount = 0;
+      let newBalance = 0;
+      switch (category) { // assign value to amount based on category; this was tedious.
+      case 'University Course':
+        amount = employee.balance * 0.8;
+        newBalance = employee.balance - amount;
+        userService.updateUser(employee, newBalance);
+        break;
+      case 'Seminar':
+        amount = employee.balance * 0.6;
+        newBalance = employee.balance - amount;
+        userService.updateUser(employee, newBalance);
+        break;
+      case 'Certification Preparation Class':
+        amount = employee.balance * 0.75;
+        employee.balance -= amount;
+        break;
+      case 'Certification':
+        amount = employee.balance;
+        newBalance = employee.balance - amount;
+        userService.updateUser(employee, newBalance);
+        break;
+      case 'Technical Training':
+        amount = employee.balance * 0.9;
+        newBalance = employee.balance - amount;
+        userService.updateUser(employee, newBalance);
+        break;
+      case 'Other':
+        amount = employee.balance * 0.3;
+        newBalance = employee.balance - amount;
+        userService.updateUser(employee, newBalance);
+        break;
+      default:
+        console.log('Not a valid category');
+        break;
+      }
+      const reimbursement = new Reimbursement(employee.username, Date.now(), location, description, cost, amount, category, 'initiated');
+      reimbursementService.addReimbursement(reimbursement);
+      res.status(201).send();
+    } catch(error) {
+      res.status(401).send();
+      error.log(error);
+    }
   }
+  console.log(req.session.isLoggedIn);
+  console.log(req.session.user);
+  console.log('You must be signed in and be an employee to submit a reimbursement form');
 });
 
 reimbursementRouter.put('/', async (req, res) => {

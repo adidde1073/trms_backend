@@ -12,6 +12,7 @@ async function populateTable() {
       '1 Finite Loop',
       '8087772424',
       'BenCo',
+      0,
     ),
   );
 
@@ -22,6 +23,7 @@ async function populateTable() {
       '1 Finite Loop',
       '8007771234',
       'DepHead',
+      0,
     ),
   );
   await userDAO.putUser(
@@ -31,6 +33,7 @@ async function populateTable() {
       '1 Finite Loop',
       '8007776789',
       'DirSupervisor',
+      0,
     ),
   );
   await userDAO.putUser(
@@ -40,6 +43,7 @@ async function populateTable() {
       '1 Finite Loop',
       '8007776789',
       'Employee',
+      1000,
     ),
   );
 }

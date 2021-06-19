@@ -102,6 +102,30 @@ export class UserDAO {
     }
   }
 
+  async updateUser(user: User): Promise<boolean> {
+    const params: DocumentClient.PutItemInput = {
+      TableName: 'trms',
+      Item: {
+        ...user,
+        category: 'User',
+      },
+      ReturnConsumedCapacity: 'TOTAL',
+      ConditionExpression: 'id = :id',
+      ExpressionAttributeValues: {
+        ':id': user.id,
+      },
+    };
+    try {
+      const result = await this.client.put(params).promise();
+
+      log.debug(result);
+      return true;
+    } catch(error) {
+      log.error(error);
+      return false;
+    }
+  }
+
   async deleteUser(id: string): Promise<boolean> {
     const params: DocumentClient.GetItemInput = {
       TableName: 'trms',

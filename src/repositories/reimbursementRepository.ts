@@ -22,16 +22,14 @@ export class ReimbursementDAO {
       ExpressionAttributeNames: {
         '#u': 'username',
         '#d': 'date',
-        '#t': 'time',
         '#l': 'location',
         '#dsc': 'description',
         '#c': 'cost',
-        '#et': 'eventType',
         '#a': 'amount',
         '#cat': 'category',
         '#r': 'rStat',
       },
-      ProjectionExpression: '#u, #d, #t, #l, #dsc, #c, #et, #a, #cat, #r',
+      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #cat, #r',
     };
 
     const data = await this.client.scan(params).promise();
@@ -53,15 +51,13 @@ export class ReimbursementDAO {
         ':c': 'User',
         ':u': username,
       },
-      ProjectionExpression: '#u, #d, #t, #l, #dsc, #c, #et, #a, #cat, #r',
+      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #cat, #r',
       ExpressionAttributeNames: {
         '#u': 'username',
         '#d': 'date',
-        '#t': 'time',
         '#l': 'location',
         '#dsc': 'description',
         '#c': 'cost',
-        '#et': 'eventType',
         '#a': 'amount',
         '#cat': 'category',
         '#r': 'rStat',
@@ -87,16 +83,14 @@ export class ReimbursementDAO {
       ExpressionAttributeNames: {
         '#u': 'username',
         '#d': 'date',
-        '#t': 'time',
         '#l': 'location',
         '#dsc': 'description',
         '#c': 'cost',
-        '#et': 'eventType',
         '#a': 'amount',
         '#cat': 'category',
         '#r': 'rStat',
       },
-      ProjectionExpression: '#u, #d, #t, #l, #dsc, #c, #et, #a, #cat, #r',
+      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #cat, #r',
     };
 
     const data = await this.client.get(params).promise();
