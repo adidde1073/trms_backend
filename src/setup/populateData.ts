@@ -33,6 +33,15 @@ async function populateTable() {
       'DirSupervisor',
     ),
   );
+  await userDAO.putUser(
+    new User(
+      'ted',
+      'pass',
+      '1 Finite Loop',
+      '8007776789',
+      'Employee',
+    ),
+  );
 }
 
 (async () => {

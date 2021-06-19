@@ -12,15 +12,15 @@ const baseRouter = Router();
 // });
 //
 // baseRouter.get('/login.html', (req, res) => {
-//   res.sendFile(path.resolve(__dirname, '../public/views/login.html'));
+//  res.sendFile(path.resolve(__dirname, '../public/views/login.html'));
 // });
 //
 // // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // baseRouter.get('/json', async (req, res) => {
-//   console.log('Our callback was invoked!');
-//   // res.json({ data: 'This is sending back JSON' });
-//
-//   throw new Error('Something went wrong!');
+//  console.log('Our callback was invoked!');
+// res.json({ data: 'This is sending back JSON' });
+
+//  throw new Error('Something went wrong!');
 // });
 
 baseRouter.post('/login', async (req: express.Request<unknown, unknown, { username: string, password: string }, unknown, {}>, res) => {
@@ -30,8 +30,6 @@ baseRouter.post('/login', async (req: express.Request<unknown, unknown, { userna
     const current = await UserService.login(username, password);
     req.session.isLoggedIn = true;
 
-    // eslint-disable-next-line max-len
-    // req.session.user = new User(user.username, user.password, user.address, user.phoneNumber, user.role);
     req.session.user = current;
 
     res.json(req.session.user);
