@@ -35,11 +35,11 @@ reimbursementRouter.post('/', async (req, res) => {
       const employee: User = req.session.user;
       console.log(employee);
       const {
-        location, description, cost, category,
+        location, description, cost, reimbursementCategory,
       } = req.body;
       let amount = 0;
       let newBalance = 0;
-      switch (category) { // assign value to amount based on category; this was tedious.
+      switch (reimbursementCategory) { // assign value to amount based on category; this was tedious.
       case 'University Course':
         amount = employee.balance * 0.8;
         newBalance = employee.balance - amount;
@@ -73,7 +73,7 @@ reimbursementRouter.post('/', async (req, res) => {
         console.log('Not a valid category');
         break;
       }
-      const reimbursement = new Reimbursement(employee.username, Date.now(), location, description, cost, amount, category, 'initiated');
+      const reimbursement = new Reimbursement(employee.username, Date.now().toString(), location, description, cost, amount, reimbursementCategory, 'initiated');
       reimbursementService.addReimbursement(reimbursement);
       res.status(201).send();
     } catch(error) {
