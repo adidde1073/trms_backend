@@ -2,6 +2,7 @@
 /* eslint-disable no-param-reassign */
 /* eslint-disable new-cap */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import log from '../log';
 import Reimbursement, { rStat } from '../models/reimbursement';
 import reimbursementDAO, { ReimbursementDAO } from '../repositories/reimbursementRepository';
 
@@ -17,7 +18,12 @@ class ReimbursementService {
   }
 
   getAll(): Promise<Reimbursement[]> {
-    return this.dao.getAll();
+    try {
+      return this.dao.getAll();
+    } catch(error) {
+      log.error(error);
+      throw new Error('Could not get reimgursements');
+    }
   }
 
   updateReimbursement(reimbursement: Reimbursement, newStatus: rStat, amount: number): Promise<boolean> {

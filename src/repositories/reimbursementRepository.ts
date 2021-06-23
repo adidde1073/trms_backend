@@ -12,13 +12,14 @@ export class ReimbursementDAO {
   }
 
   async getAll(): Promise<Reimbursement[]> {
+    console.log('Getting reimbursements');
     const params: DocumentClient.QueryInput = {
       TableName: 'trms',
       KeyConditionExpression: 'category = :c',
+      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #rcat, #r',
       ExpressionAttributeValues: {
         ':c': 'Reimbursement',
       },
-
       ExpressionAttributeNames: {
         '#u': 'username',
         '#d': 'date',
@@ -29,10 +30,9 @@ export class ReimbursementDAO {
         '#rcat': 'reimbursementCategory',
         '#r': 'rStat',
       },
-      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #rcat, #r',
     };
 
-    const data = await this.client.scan(params).promise();
+    const data = await this.client.query(params).promise();
 
     if(data.Items) {
       return data.Items as Reimbursement[];

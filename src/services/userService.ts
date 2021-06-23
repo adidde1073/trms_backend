@@ -32,6 +32,14 @@ class UserService {
     }
     throw new Error('Could not find user');
   }
+
+  getUserBalance(user: User): number {
+    if(this.dao.getById(user.id)) {
+      console.log('Loading balance from DAO ', user.balance);
+      return user.balance;
+    }
+    throw new Error('Could not find user');
+  }
 }
 
 export default new UserService();

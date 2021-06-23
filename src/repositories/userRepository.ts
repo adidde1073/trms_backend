@@ -64,7 +64,7 @@ export class UserDAO {
       ExpressionAttributeNames: {
         '#r': 'role',
       },
-      ProjectionExpression: 'id, username, password, address, phoneNumber, #r',
+      ProjectionExpression: 'id, username, password, address, phoneNumber, #r, balance',
     };
 
     const data = await this.client.query(params).promise();

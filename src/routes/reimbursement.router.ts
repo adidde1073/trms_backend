@@ -2,38 +2,48 @@
 import { Router } from 'express';
 import Reimbursement from '../models/reimbursement';
 import reimbursementService from '../services/reimbursementService';
+import log from '../log';
 import userService from '../services/userService';
 import User from '../models/user';
 
 const reimbursementRouter = Router();
 
 reimbursementRouter.get('/', async (req, res) => {
-  res.json(
-    await reimbursementService.getAll(),
-  );
+  try {
+    res.json(
+      await reimbursementService.getAll(),
+    );
+  } catch(error) {
+    log.error(error);
+    res.status(500).send();
+  }
 });
 
 reimbursementRouter.get('/:username', async (req, res) => {
   // TODO: Implement the GET reimbursements by ID endpoint
-  console.log('Gettting reimbursement by username');
+  try {
+    console.log('Gettting reimbursement by username');
 
-  const { username } = req.params;
+    const { username } = req.params;
 
-  if(!req.session.isLoggedIn || !req.session.user) {
-    throw new Error('You must be logged in to access this functionality');
+    if(!req.session.isLoggedIn || !req.session.user) {
+      throw new Error('You must be logged in to access this functionality');
+    }
+    res.json(
+      await reimbursementService.getUserReimbursements(username),
+    );
+    res.status(200).send();
+  } catch(error) {
+    log.error(error);
+    res.status(500).send();
   }
-  res.json(
-    await reimbursementService.getUserReimbursements(username),
-  );
 });
 
-reimbursementRouter.post('/', async (req, res) => {
+reimbursementRouter.post('/', async (req, res) => { // modify to change amount - cost*coverage
   // TODO: Implement the Create reimbursement endpoint
   if(req.session.isLoggedIn && req.session.user) {
     try {
-      console.log('I made into the try catch');
       const employee: User = req.session.user;
-      console.log(employee);
       const {
         location, description, cost, reimbursementCategory,
       } = req.body;
@@ -41,48 +51,48 @@ reimbursementRouter.post('/', async (req, res) => {
       let newBalance = 0;
       switch (reimbursementCategory) { // assign value to amount based on category; this was tedious.
       case 'University Course':
-        amount = employee.balance * 0.8;
-        newBalance = employee.balance - amount;
+        amount = userService.getUserBalance(employee) * 0.8;
+        newBalance = userService.getUserBalance(employee) - amount;
         userService.updateUser(employee, newBalance);
         break;
       case 'Seminar':
-        amount = employee.balance * 0.6;
-        newBalance = employee.balance - amount;
+        amount = cost * 0.6;
+        newBalance = userService.getUserBalance(employee) - amount;
         userService.updateUser(employee, newBalance);
         break;
       case 'Certification Preparation Class':
-        amount = employee.balance * 0.75;
-        employee.balance -= amount;
+        amount = cost * 0.75;
+        newBalance = userService.getUserBalance(employee) - amount;
+        userService.updateUser(employee, newBalance);
         break;
       case 'Certification':
-        amount = employee.balance;
-        newBalance = employee.balance - amount;
+        amount = cost;
+        newBalance = userService.getUserBalance(employee) - amount;
         userService.updateUser(employee, newBalance);
         break;
       case 'Technical Training':
-        amount = employee.balance * 0.9;
-        newBalance = employee.balance - amount;
+        amount = cost * 0.9;
+        newBalance = userService.getUserBalance(employee) - amount;
         userService.updateUser(employee, newBalance);
         break;
       case 'Other':
-        amount = employee.balance * 0.3;
-        newBalance = employee.balance - amount;
+        amount = cost * 0.3;
+        newBalance = userService.getUserBalance(employee) - amount;
         userService.updateUser(employee, newBalance);
         break;
       default:
         console.log('Not a valid category');
         break;
       }
+      console.log('Amount: ', amount);
       const reimbursement = new Reimbursement(employee.username, Date.now().toString(), location, description, cost, amount, reimbursementCategory, 'initiated');
       reimbursementService.addReimbursement(reimbursement);
       res.status(201).send();
     } catch(error) {
-      res.status(401).send();
+      res.status(400).send();
       error.log(error);
     }
   }
-  console.log(req.session.isLoggedIn);
-  console.log(req.session.user);
   console.log('You must be signed in and be an employee to submit a reimbursement form');
 });
 
