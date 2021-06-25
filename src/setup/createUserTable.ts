@@ -7,30 +7,18 @@ AWS.config.update({ region: 'us-west-2' });
 
 const ddb = new AWS.DynamoDB({ apiVersion: 'latest' });
 
-const TableName = 'trms';
+const TableName = 'trms-users';
 
 const params: AWS.DynamoDB.CreateTableInput = {
   KeySchema: [
     {
-      AttributeName: 'category',
-      KeyType: 'HASH',
-    },
-    {
       AttributeName: 'id',
-      KeyType: 'RANGE',
+      KeyType: 'HASH',
     },
   ],
   AttributeDefinitions: [
     {
-      AttributeName: 'category',
-      AttributeType: 'S',
-    },
-    {
       AttributeName: 'id',
-      AttributeType: 'S',
-    },
-    {
-      AttributeName: 'username',
       AttributeType: 'S',
     },
   ],
@@ -42,24 +30,6 @@ const params: AWS.DynamoDB.CreateTableInput = {
   StreamSpecification: {
     StreamEnabled: false,
   },
-  LocalSecondaryIndexes: [
-    {
-      IndexName: 'user-username',
-      KeySchema: [
-        {
-          AttributeName: 'category',
-          KeyType: 'HASH',
-        },
-        {
-          AttributeName: 'username',
-          KeyType: 'RANGE',
-        },
-      ],
-      Projection: {
-        ProjectionType: 'KEYS_ONLY',
-      },
-    },
-  ],
 };
 
 (async () => {

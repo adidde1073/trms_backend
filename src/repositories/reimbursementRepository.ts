@@ -13,14 +13,11 @@ export class ReimbursementDAO {
 
   async getAll(): Promise<Reimbursement[]> {
     console.log('Getting reimbursements');
-    const params: DocumentClient.QueryInput = {
-      TableName: 'trms',
-      KeyConditionExpression: 'category = :c',
-      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #rcat, #r',
-      ExpressionAttributeValues: {
-        ':c': 'Reimbursement',
-      },
+    const params: DocumentClient.ScanInput = {
+      TableName: 'trms-reims',
+      ProjectionExpression: '#i, #u, #d, #l, #dsc, #c, #a, #rcat, #r, #g, #m',
       ExpressionAttributeNames: {
+        '#i': 'id',
         '#u': 'username',
         '#d': 'date',
         '#l': 'location',
@@ -29,10 +26,12 @@ export class ReimbursementDAO {
         '#a': 'amount',
         '#rcat': 'reimbursementCategory',
         '#r': 'rStat',
+        '#g': 'grade',
+        '#m': 'message',
       },
     };
 
-    const data = await this.client.query(params).promise();
+    const data = await this.client.scan(params).promise();
 
     if(data.Items) {
       return data.Items as Reimbursement[];
@@ -43,24 +42,14 @@ export class ReimbursementDAO {
   }
 
   async getReimbursementsByUsername(username: string): Promise<Reimbursement[]> {
-    const params: DocumentClient.QueryInput = {
-      TableName: 'trms',
-      IndexName: 'user-username',
-      KeyConditionExpression: 'category = :c AND username = :u',
+    const params: DocumentClient.ScanInput = {
+      TableName: 'trms-reims',
+      FilterExpression: '#u = :u',
       ExpressionAttributeValues: {
-        ':c': 'User',
         ':u': username,
       },
-      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #rcat, #r',
       ExpressionAttributeNames: {
         '#u': 'username',
-        '#d': 'date',
-        '#l': 'location',
-        '#dsc': 'description',
-        '#c': 'cost',
-        '#a': 'amount',
-        '#rcat': 'reimbursementCategory',
-        '#r': 'rStat',
       },
     };
 
@@ -74,40 +63,32 @@ export class ReimbursementDAO {
   }
 
   async getReimbursementById(id: string): Promise<Reimbursement> {
-    const params: DocumentClient.GetItemInput = {
-      TableName: 'trms',
-      Key: {
-        category: 'Reimbursement',
-        id,
+    const params: DocumentClient.ScanInput = {
+      TableName: 'trms-reims',
+      FilterExpression: '#id = :id',
+      ExpressionAttributeValues: {
+        ':id': id,
       },
       ExpressionAttributeNames: {
-        '#u': 'username',
-        '#d': 'date',
-        '#l': 'location',
-        '#dsc': 'description',
-        '#c': 'cost',
-        '#a': 'amount',
-        '#rcat': 'reimbursementCategory',
-        '#r': 'rStat',
+        '#id': 'id',
       },
-      ProjectionExpression: '#u, #d, #l, #dsc, #c, #a, #rcat, #r',
     };
 
-    const data = await this.client.get(params).promise();
-
-    if(data) {
-      return data.Item as Reimbursement;
+    const data = await this.client.scan(params).promise();
+    console.log(data);
+    if(!data.Items || data.Count === 0) {
+      // No User found with this username
+      console.log('Could not find reimbursement.');
+      throw new Error('could not find reimbursement');
     }
-    throw new Error('Could not find reimbursement.');
+
+    return data.Items[0] as Reimbursement;
   }
 
   async putReimbursement(reimbursement: Reimbursement): Promise<boolean> {
     const params: DocumentClient.PutItemInput = {
-      TableName: 'trms',
-      Item: {
-        ...reimbursement,
-        category: 'Reimbursement',
-      },
+      TableName: 'trms-reims',
+      Item: reimbursement,
       ReturnConsumedCapacity: 'TOTAL',
       ConditionExpression: 'id <> :id',
       ExpressionAttributeValues: {
@@ -127,11 +108,8 @@ export class ReimbursementDAO {
 
   async updateReimbursement(reimbursement: Reimbursement): Promise<boolean> {
     const params: DocumentClient.PutItemInput = {
-      TableName: 'trms',
-      Item: {
-        ...reimbursement,
-        category: 'Reimbursement',
-      },
+      TableName: 'trms-reims',
+      Item: reimbursement,
       ReturnConsumedCapacity: 'TOTAL',
       ConditionExpression: 'id = :id',
       ExpressionAttributeValues: {
@@ -149,21 +127,23 @@ export class ReimbursementDAO {
     }
   }
 
-  async deleteReimbursement(id: string): Promise<boolean> {
+  async deleteReimbursement(inputId: string): Promise<boolean> {
+    // console.log('this is id in DAO', inputId);
     const params: DocumentClient.DeleteItemInput = {
-      TableName: 'trms',
+      TableName: 'trms-reims',
       Key: {
-        category: 'Reimbursement',
-        id,
+        id: inputId,
       },
     };
 
     try {
-      await this.client.delete(params).promise();
-
+      console.log('attempting to delete reimbursement');
+      const deleted = await this.client.delete(params).promise();
+      console.log(deleted);
+      console.log('deleted!');
       return true;
     } catch(error) {
-      console.log('Failed to delete Restaurant: ', error);
+      console.log('Failed to delete Reimbursement: ', error);
       return false;
     }
   }

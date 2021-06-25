@@ -12,7 +12,8 @@
     "lint:fix": "eslint ** --fix",
     "tsc": "tsc",
     "build": "ts-node build.ts",
-    "setup": "ts-node src/setup/createTable.ts",
+    "setup0": "ts-node src/setup/createUserTable.ts",
+    "setup1": "ts-node src/setup/createReimsTable.ts",
     "teardown": "ts-node src/setup/deleteTable.ts",
     "populate": "ts-node src/setup/populateData.ts"
   },

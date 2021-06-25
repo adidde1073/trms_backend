@@ -26,10 +26,10 @@ class ReimbursementService {
     }
   }
 
-  updateReimbursement(reimbursement: Reimbursement, newStatus: rStat, amount: number): Promise<boolean> {
+  updateReimbursement(reimbursement: Reimbursement, newStatus: rStat, amount?: number): Promise<boolean> {
     if(this.dao.getReimbursementById(reimbursement.id)) {
       reimbursement.rStat = newStatus;
-      if(amount !== 0) {
+      if(amount) {
         reimbursement.amount = amount;
       }
 
@@ -49,6 +49,7 @@ class ReimbursementService {
   }
 
   public deleteReimbursement(id: string) {
+    this.dao.getReimbursementById(id);
     this.dao.deleteReimbursement(id);
   }
 }

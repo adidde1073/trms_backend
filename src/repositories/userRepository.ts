@@ -13,7 +13,7 @@ export class UserDAO {
 
   async getAll(): Promise<User[]> {
     const params: DocumentClient.QueryInput = {
-      TableName: 'Grubdash',
+      TableName: 'trms-user',
       KeyConditionExpression: 'category = :c',
       ExpressionAttributeValues: {
         ':c': 'User',
@@ -33,7 +33,6 @@ export class UserDAO {
     const params: DocumentClient.GetItemInput = {
       TableName: 'Grubdash',
       Key: {
-        category: 'User',
         id,
       },
       ExpressionAttributeNames: {
@@ -52,39 +51,30 @@ export class UserDAO {
     return data.Item as User;
   }
 
-  async getByUsername(username: string): Promise<User | null> {
-    const params: DocumentClient.QueryInput = {
-      TableName: 'trms',
-      IndexName: 'user-username',
-      KeyConditionExpression: 'category = :c AND username = :u',
+  async getByUsername(username: string): Promise<User> {
+    const params: DocumentClient.ScanInput = {
+      TableName: 'trms-users',
+      FilterExpression: '#u = :u',
       ExpressionAttributeValues: {
-        ':c': 'User',
         ':u': username,
       },
       ExpressionAttributeNames: {
-        '#r': 'role',
+        '#u': 'username',
       },
-      ProjectionExpression: 'id, username, password, address, phoneNumber, #r, balance',
     };
 
-    const data = await this.client.query(params).promise();
-
-    if(!data.Items || data.Count === 0) {
-      // No User found with this username
-      console.log('Could not find user with that username.');
-      return null;
+    const data = await this.client.scan(params).promise();
+    if(!data.Items) {
+      console.log('Cannot find user');
+      throw new Error('it is high time we go to bed.');
     }
-
     return data.Items[0] as User;
   }
 
   async putUser(user: User): Promise<boolean> {
     const params: DocumentClient.PutItemInput = {
-      TableName: 'trms',
-      Item: {
-        ...user,
-        category: 'User',
-      },
+      TableName: 'trms-users',
+      Item: user,
       ReturnConsumedCapacity: 'TOTAL',
       ConditionExpression: 'id <> :id',
       ExpressionAttributeValues: {
@@ -104,11 +94,8 @@ export class UserDAO {
 
   async updateUser(user: User): Promise<boolean> {
     const params: DocumentClient.PutItemInput = {
-      TableName: 'trms',
-      Item: {
-        ...user,
-        category: 'User',
-      },
+      TableName: 'trms-users',
+      Item: user,
       ReturnConsumedCapacity: 'TOTAL',
       ConditionExpression: 'id = :id',
       ExpressionAttributeValues: {
@@ -128,9 +115,8 @@ export class UserDAO {
 
   async deleteUser(id: string): Promise<boolean> {
     const params: DocumentClient.GetItemInput = {
-      TableName: 'trms',
+      TableName: 'trms-users',
       Key: {
-        category: 'User',
         id,
       },
     };

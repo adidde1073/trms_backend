@@ -1,6 +1,6 @@
 /* eslint-disable max-len */
 import { Router } from 'express';
-import Reimbursement from '../models/reimbursement';
+import Reimbursement, { rStat } from '../models/reimbursement';
 import reimbursementService from '../services/reimbursementService';
 import log from '../log';
 import userService from '../services/userService';
@@ -10,6 +10,7 @@ const reimbursementRouter = Router();
 
 reimbursementRouter.get('/', async (req, res) => {
   try {
+    console.log('Getting reimbursements');
     res.json(
       await reimbursementService.getAll(),
     );
@@ -24,13 +25,12 @@ reimbursementRouter.get('/:username', async (req, res) => {
   try {
     console.log('Gettting reimbursement by username');
 
-    const { username } = req.params;
-
     if(!req.session.isLoggedIn || !req.session.user) {
       throw new Error('You must be logged in to access this functionality');
     }
+    console.log('Current user: ', req.session.user.username);
     res.json(
-      await reimbursementService.getUserReimbursements(username),
+      await reimbursementService.getUserReimbursements(req.session.user.username),
     );
     res.status(200).send();
   } catch(error) {
@@ -39,19 +39,19 @@ reimbursementRouter.get('/:username', async (req, res) => {
   }
 });
 
-reimbursementRouter.post('/', async (req, res) => { // modify to change amount - cost*coverage
-  // TODO: Implement the Create reimbursement endpoint
-  if(req.session.isLoggedIn && req.session.user) {
+reimbursementRouter.post('/', async (req, res) => {
+  if(req.session.isLoggedIn && req.session.user && req.session.user.username) {
     try {
       const employee: User = req.session.user;
       const {
-        location, description, cost, reimbursementCategory,
+        location, description, cost, reimbursementCategory, grade,
       } = req.body;
       let amount = 0;
       let newBalance = 0;
+      const d = new Date();
       switch (reimbursementCategory) { // assign value to amount based on category; this was tedious.
       case 'University Course':
-        amount = userService.getUserBalance(employee) * 0.8;
+        amount = cost * 0.8;
         newBalance = userService.getUserBalance(employee) - amount;
         userService.updateUser(employee, newBalance);
         break;
@@ -84,8 +84,7 @@ reimbursementRouter.post('/', async (req, res) => { // modify to change amount -
         console.log('Not a valid category');
         break;
       }
-      console.log('Amount: ', amount);
-      const reimbursement = new Reimbursement(employee.username, Date.now().toString(), location, description, cost, amount, reimbursementCategory, 'initiated');
+      const reimbursement = new Reimbursement(employee.username, `${d.getMonth()}/${d.getDay()}/${d.getFullYear()}`, location, description, cost, amount, reimbursementCategory, 'initiated', grade, '');
       reimbursementService.addReimbursement(reimbursement);
       res.status(201).send();
     } catch(error) {
@@ -93,19 +92,62 @@ reimbursementRouter.post('/', async (req, res) => { // modify to change amount -
       error.log(error);
     }
   }
-  console.log('You must be signed in and be an employee to submit a reimbursement form');
 });
 
 reimbursementRouter.put('/', async (req, res) => {
   // TODO: Implement the Update reimbursement endpoint
-  const { id, rstat, amount } = req.body;
+  console.log('updating');
+  const { id, amount } = req.body;
+  const { user } = req.session;
+  const reimbursement = await reimbursementService.getReimbursement(id);
 
   try {
-    const reimbursement = await reimbursementService.getReimbursement(id);
-    req.session.isLoggedIn = true;
+    if(reimbursement !== null && user) {
+    /*  const oldAmount = reimbursement.amount; */
+      let newStatus: rStat = 'initiated';
+      req.session.isLoggedIn = true;
 
-    // eslint-disable-next-line max-len
-    reimbursementService.updateReimbursement(reimbursement, rstat, amount);
+      switch (user.role) {
+      case 'DirSupervisor':
+        newStatus = 'approved by DirSupervisor';
+        break;
+      case 'DepHead':
+        newStatus = 'approved by DepHead';
+        break;
+      case 'BenCo':
+        newStatus = 'Approved!';
+        break;
+      default:
+        break;
+      }
+      /* const employee = userService.getUser(reimbursement.username);
+      let balance = userService.getUserBalance(employee);
+      balance = employee.balance - amount + oldAmount;
+      userService.updateUser(employee, balance); */
+      reimbursementService.updateReimbursement(reimbursement, newStatus, amount);
+    }
+
+    res.status(200).send();
+  } catch(error) {
+    res.status(401).send();
+    error.log(error);
+  }
+});
+
+reimbursementRouter.patch('/', async (req, res) => {
+  // TODO: Implement the Update reimbursement endpoint
+  console.log('rejecting');
+  const { id } = req.body;
+  const { user } = req.session;
+  const reimbursement = await reimbursementService.getReimbursement(id);
+
+  try {
+    if(reimbursement !== null && user) {
+      const newStatus: rStat = 'rejected';
+      req.session.isLoggedIn = true;
+
+      reimbursementService.updateReimbursement(reimbursement, newStatus);
+    }
 
     res.status(200).send();
   } catch(error) {
@@ -116,7 +158,10 @@ reimbursementRouter.put('/', async (req, res) => {
 
 reimbursementRouter.delete('/:id', async (req, res) => {
   // Delete reimbursement by ID endpoint
-  const { id } = req.body;
+  // eslint-disable-next-line prefer-destructuring
+  const id = req.params.id.substring(1);
+  console.log(typeof (id));
+  console.log('This is id in router', id);
 
   try {
     req.session.isLoggedIn = true;

@@ -2,6 +2,7 @@
 /* eslint-disable consistent-return */
 import User from '../models/user';
 import userDAO, { UserDAO } from '../repositories/userRepository';
+import log from '../log';
 
 class UserService {
   private dao: UserDAO;
@@ -10,16 +11,25 @@ class UserService {
     this.dao = userDAO;
   }
 
-  async login(username: string, password: string): Promise<User> {
-    const found = await this.dao.getByUsername(username);
+  async login(username: string, password: string): Promise<User | undefined> {
+    try {
+      const found = await this.dao.getByUsername(username);
 
-    if(found) {
-      if(found.password !== password) {
-        throw new Error('Password is incorrect');
+      if(found) {
+        if(found.password !== password) {
+          throw new Error('Password is incorrect');
+        }
+        return found;
       }
-      return found;
+      throw new Error('Usernmae does not exist');
+    } catch(error) {
+      log.error(error);
     }
-    throw new Error('Usernmae does not exist');
+    return undefined;
+  }
+
+  getUser(username:string): Promise<User> {
+    return this.dao.getByUsername(username);
   }
 
   updateUser(user: User, newBalance: number): Promise<boolean> {

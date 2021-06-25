@@ -10,9 +10,11 @@ export default class Reimbursement {
     public amount: number,
     public reimbursementCategory: Category,
     public rStat: rStat,
+    public grade: string,
+    public message: string,
     public id: string = uuidv4(),
   ) {}
 }
 
 export type Category = 'University Course' | 'Seminar' | 'Certification Preparation Class' | 'Certification' | 'Technical Training' | 'Other';
-export type rStat = 'initiated' | 'approved by DirSupervisor' | 'approved by DepHead' | 'approved by BenCo';
+export type rStat = 'initiated' | 'approved by DirSupervisor' | 'approved by DepHead' | 'Approved!' | 'rejected';

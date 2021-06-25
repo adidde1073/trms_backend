@@ -4,24 +4,9 @@ import userRouter from './user.router';
 import reimbursementRouter from './reimbursement.router';
 // import User from '../models/user';
 import UserService from '../services/userService';
+import log from '../log';
 
 const baseRouter = Router();
-
-// baseRouter.get('/', (req, res) => {
-//  res.sendFile(path.resolve(__dirname, '../public/views/index.html'));
-// });
-//
-// baseRouter.get('/login.html', (req, res) => {
-//  res.sendFile(path.resolve(__dirname, '../public/views/login.html'));
-// });
-//
-// // eslint-disable-next-line @typescript-eslint/no-unused-vars
-// baseRouter.get('/json', async (req, res) => {
-//  console.log('Our callback was invoked!');
-// res.json({ data: 'This is sending back JSON' });
-
-//  throw new Error('Something went wrong!');
-// });
 
 baseRouter.post('/login', async (req: express.Request<unknown, unknown, { username: string, password: string }, unknown, {}>, res) => {
   const { username, password } = req.body;
@@ -36,7 +21,7 @@ baseRouter.post('/login', async (req: express.Request<unknown, unknown, { userna
     res.status(202).send();
   } catch(error) {
     res.status(401).send();
-    error.log(error);
+    log.error(error);
   }
 });
 
