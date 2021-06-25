@@ -26,11 +26,14 @@ class ReimbursementService {
     }
   }
 
-  updateReimbursement(reimbursement: Reimbursement, newStatus: rStat, amount?: number): Promise<boolean> {
+  updateReimbursement(reimbursement: Reimbursement, newStatus: rStat, amount?: number, message?: string): Promise<boolean> {
     if(this.dao.getReimbursementById(reimbursement.id)) {
       reimbursement.rStat = newStatus;
-      if(amount) {
+      if(amount && amount !== 1001) {
         reimbursement.amount = amount;
+      }
+      if(message) {
+        reimbursement.message = message;
       }
 
       const success = this.dao.updateReimbursement(reimbursement);

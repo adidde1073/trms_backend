@@ -137,7 +137,7 @@ reimbursementRouter.put('/', async (req, res) => {
 reimbursementRouter.patch('/', async (req, res) => {
   // TODO: Implement the Update reimbursement endpoint
   console.log('rejecting');
-  const { id } = req.body;
+  const { id, message } = req.body;
   const { user } = req.session;
   const reimbursement = await reimbursementService.getReimbursement(id);
 
@@ -146,7 +146,7 @@ reimbursementRouter.patch('/', async (req, res) => {
       const newStatus: rStat = 'rejected';
       req.session.isLoggedIn = true;
 
-      reimbursementService.updateReimbursement(reimbursement, newStatus);
+      reimbursementService.updateReimbursement(reimbursement, newStatus, 1001, message);
     }
 
     res.status(200).send();
